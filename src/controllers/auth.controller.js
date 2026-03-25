@@ -1,27 +1,59 @@
 const { validateUserName, validatePassword } = require('../validators/auth.validator');
-const {handleRegister} = require('../services/auth.service');
+const {handleRegister, handleLogin} = require('../services/auth.service');
+
+const {StatusCodes} = require('http-status-codes');
 
 const register = async (req, res)=>{
-    const {username, password} = req.body;
+    try {
+        const {username, password} = req.body;
 
-    // Validate UserName
-    const usernameError = validateUserName(username);
-    const passwordError = validatePassword(password);
-    if(usernameError){
-        return res.status(400).json({message: usernameError});
+        // Validation
+        const usernameError = validateUserName(username);
+        const passwordError = validatePassword(password);
+        if(usernameError){
+            return res.status(StatusCodes.BAD_REQUEST).json({message: usernameError});
+        }
+        if(passwordError){
+            return res.status(StatusCodes.BAD_REQUEST).json({message: passwordError});
+        }
+
+        // Service
+        const result = await handleRegister(username, password);
+        return res.status(StatusCodes.CREATED).json(result);
+        
+    } catch (error) {
+        return res.status(error.statusCode || StatusCodes.INTERNAL_SERVER_ERROR).json({
+            message: error.message || "something went wrong!"
+        })
     }
-    if(passwordError){
-        return res.status(400).json({message: passwordError});
-    }
-    const result = await handleRegister(username, password);
-    if(result?.error){
-        return res.status(400).json({message: result.error});
-    }
-    return res.json(result);
+    
 
 }
 const login = async (req, res)=>{
-    return res.json({data: "login"});
+    try {
+        const {username, password} = req.body;
+
+        // Validation
+        const usernameError = validateUserName(username);
+        const passwordError = validatePassword(password);
+    
+        if(usernameError){
+            return res.status(StatusCodes.BAD_REQUEST).json({message: usernameError});
+        }
+        if(passwordError){
+            return res.status(StatusCodes.BAD_REQUEST).json({message: passwordError});
+        }
+    
+        // Service
+        const result = await handleLogin(username, password);
+        return res.status(StatusCodes.OK).json(result);
+
+    } catch (error) {
+        return res.status(error.statusCode || StatusCodes.INTERNAL_SERVER_ERROR).json({
+            message: error.message || "something went wrong!"
+        })
+    }
+
 
 }
 

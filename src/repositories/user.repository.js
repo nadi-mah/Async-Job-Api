@@ -1,7 +1,7 @@
 const user = [];
 
-const findUserByUserName = (userName)=>{
-    return user.find(user => user.userName === userName);
+const findUserByUserName = (username)=>{
+    return user.find(user => user.username === username);
 }
 const createUser = (newUser)=>{
     user.push(newUser);
