@@ -8,8 +8,12 @@ const createUser = (newUser)=>{
     console.log(user);
     return true;
 }
+const findUserByUserId = (userId) => {
+    return user.find(user => user.id === userId);
+}
 
 module.exports = {
     findUserByUserName,
-    createUser
+    createUser,
+    findUserByUserId
 }

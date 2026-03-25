@@ -1,4 +1,4 @@
-const { findUserByUserName, createUser } = require('../repositories/user.repository');
+const { findUserByUserName, createUser, findUserByUserId } = require('../repositories/user.repository');
 const { hashPassword, comparePassword } = require('../utils/password.util');
 const { generateAccessToken, generateRefreshToken } = require('../utils/token.util');
 const AppError = require('../utils/appError.util');
@@ -54,7 +54,19 @@ const handleLogin = async (username, password)=>{
     }
 }
 
+const handleMe = async (userId) =>{
+    const user = findUserByUserId(userId);
+    if(!user){
+        throw new AppError("User not found", StatusCodes.NOT_FOUND);
+    }
+    return {data: {
+        id: userId,
+        username: user.username
+    }};
+}
+
 module.exports = {
     handleRegister,
-    handleLogin
+    handleLogin,
+    handleMe
 }

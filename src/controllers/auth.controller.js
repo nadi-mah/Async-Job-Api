@@ -1,5 +1,5 @@
 const { validateUserName, validatePassword } = require('../validators/auth.validator');
-const {handleRegister, handleLogin} = require('../services/auth.service');
+const {handleRegister, handleLogin, handleMe} = require('../services/auth.service');
 
 const {StatusCodes} = require('http-status-codes');
 
@@ -56,8 +56,21 @@ const login = async (req, res)=>{
 
 
 }
+const me = async (req, res) => {
+    try {
+        const {userId} = req.user;
 
+        const result = await handleMe(userId);
+        return res.status(StatusCodes.OK).json(result);
+    } catch (error) {
+        return res.status(error.statusCode || StatusCodes.INTERNAL_SERVER_ERROR).json({
+            message: error.message || "something went wrong!"
+        })
+    }
+
+}
 module.exports = {
     register,
-    login
+    login, 
+    me
 }
