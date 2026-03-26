@@ -1,6 +1,6 @@
-const { findUserByUserName, createUser, findUserByUserId } = require('../repositories/user.repository');
+const { findUserByUserName, createUser, findUserByUserId, saveRefreshToken } = require('../repositories/user.repository');
 const { hashPassword, comparePassword } = require('../utils/password.util');
-const { generateAccessToken, generateRefreshToken } = require('../utils/token.util');
+const { generateAccessToken, generateRefreshToken, verifyRefreshToken } = require('../utils/token.util');
 const AppError = require('../utils/appError.util');
 
 const { v4: uuidv4 } = require('uuid')
@@ -44,6 +44,11 @@ const handleLogin = async (username, password)=>{
     const accessToken = generateAccessToken(user.id, user.username);
     const refreshToken = generateRefreshToken(user.id);
 
+    const updatedUser = saveRefreshToken(user.id, refreshToken);
+    if(!updatedUser){
+        throw new AppError("Failed to update user", StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+
     return {
         message: "User logged in successfully", 
         data:{
@@ -54,7 +59,7 @@ const handleLogin = async (username, password)=>{
     }
 }
 
-const handleMe = async (userId) =>{
+const handleMe = async (userId) => {
     const user = findUserByUserId(userId);
     if(!user){
         throw new AppError("User not found", StatusCodes.NOT_FOUND);
@@ -65,8 +70,31 @@ const handleMe = async (userId) =>{
     }};
 }
 
+const handleRefreshToken = async (refreshToken) => {
+    console.log(refreshToken)
+    const {userId} = verifyRefreshToken(refreshToken);
+
+    const user = findUserByUserId(userId);
+
+    if(!user.refreshToken === refreshToken){
+        throw new AppError("invalid refresh token", StatusCodes.UNAUTHORIZED);
+    }
+
+    const newAccessToken = generateAccessToken(userId, user.username);
+
+    return {
+        message: "New accessToken generated successfully",
+        data: {
+            accessToken: newAccessToken
+        }
+    }
+
+    
+
+}
 module.exports = {
     handleRegister,
     handleLogin,
-    handleMe
+    handleMe,
+    handleRefreshToken
 }

@@ -6,7 +6,7 @@ const generateAccessToken = (id, username) => {
     return jwt.sign(
         {userId: id, username: username}, 
         process.env.ACCESS_TOKEN_SECRET, 
-        {expiresIn: '15m'}
+        {expiresIn: '1m'}
     );
 }
 
@@ -22,12 +22,23 @@ const verifyAccessToken = (token) => {
         const {userId, username} = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
         return {userId, username}
     } catch (error) {
-        throw new AppError("invalid token", StatusCodes.UNAUTHORIZED);
+        throw new AppError("invalid access token", StatusCodes.UNAUTHORIZED);
+    }
+}
+
+const verifyRefreshToken = (token) => {
+    try {
+        const {userId} = jwt.verify(token, process.env.REFRESH_TOKEN_SECRET);
+        console.log(userId)
+        return {userId}
+    } catch (error) {
+        throw new AppError("invalid refresh token here", StatusCodes.UNAUTHORIZED);
     }
 }
 
 module.exports = {
     generateAccessToken,
     generateRefreshToken,
-    verifyAccessToken
+    verifyAccessToken,
+    verifyRefreshToken
  }

@@ -13,6 +13,9 @@
 
 **Refresh token** lasts longer, for 7 days and will be stored in redis used to generate new access token.
 
+ - What will happend if accessToken become exprired?
+   Whenever api return status code of 401, client itself call the `refreshToken` to give another accessToken. 
+
 ### **Authentication Flow:**
 
 **Register**
@@ -37,6 +40,10 @@ POST /auth/login
 
  - Requires authorization header in each req
  - JWT is verified server-side
+
+ ```javascript
+GET /auth/me
+```
 
 **Refresh token**
 

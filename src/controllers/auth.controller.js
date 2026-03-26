@@ -1,5 +1,5 @@
 const { validateUserName, validatePassword } = require('../validators/auth.validator');
-const {handleRegister, handleLogin, handleMe} = require('../services/auth.service');
+const {handleRegister, handleLogin, handleMe, handleRefreshToken} = require('../services/auth.service');
 
 const {StatusCodes} = require('http-status-codes');
 
@@ -69,8 +69,26 @@ const me = async (req, res) => {
     }
 
 }
+const refreshToken = async (req, res) =>{
+    try {
+        const {refreshToken}= req.body;
+
+        if(!refreshToken){
+            return res.status(StatusCodes.BAD_REQUEST).json({message: "No refresh token"});
+        }
+        const result = await handleRefreshToken(refreshToken);
+        return res.status(StatusCodes.OK).json(result);
+    } catch (error) {
+        return res.status(error.statusCode || StatusCodes.INTERNAL_SERVER_ERROR).json({
+            message: error.message || "something went wrong!"
+        })
+    }
+
+
+}
 module.exports = {
     register,
     login, 
-    me
+    me,
+    refreshToken
 }
