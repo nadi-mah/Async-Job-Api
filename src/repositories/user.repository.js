@@ -26,10 +26,24 @@ const saveRefreshToken = (userId, refreshToken) => {
     return updatedUser;
 
 }
+const removeRefreshToken = (userId) => {
+    const index = users.findIndex(user => user.id === userId);
+    if(index === -1){
+        return null;
+    } 
+
+    users[index] = {
+        ...users[index],
+        refreshToken: null
+    };
+
+    return users[index];
+}
 
 module.exports = {
     findUserByUserName,
     createUser,
     findUserByUserId,
-    saveRefreshToken
+    saveRefreshToken,
+    removeRefreshToken
 }

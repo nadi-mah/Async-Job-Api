@@ -34,30 +34,40 @@ POST /auth/login
 
  - Verify credentials
  - Generate acceess and refresh tokens
- - Store refresh token in redis
+ - Store refresh token in redis(temprory in memory)
 
 **Access Protected Routes**
 
- - Requires authorization header in each req
- - JWT is verified server-side
-
+example:
  ```javascript
 GET /auth/me
 ```
 
+ - Requires authorization header in each req
+ - JWT is verified server-side
+
+
+
 **Refresh token**
+
+```javascript
+POST /auth/refreshToken
+```
 
  - Validates refresh token
  - Issues new access token
 
 **Logout**
- - Deletes refresh token from Redis
+```javascript
+POST /auth/logout
+```
+ - Deletes refresh token from Redis(temprory from memory)
 
 **Security Considerations**
  - Passwords are hashed using bcrypt
  - Rate Limiting is applied on auth routes
  - Tokens have expiration times
- - Refresh tokens are stored securely in redis
+ - Refresh tokens are stored securely in redis(memory)
 
  
 ### **Alternatinve Approaches:**

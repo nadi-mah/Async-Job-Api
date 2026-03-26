@@ -1,4 +1,9 @@
-const { findUserByUserName, createUser, findUserByUserId, saveRefreshToken } = require('../repositories/user.repository');
+const { 
+    findUserByUserName, 
+    createUser, 
+    findUserByUserId, 
+    saveRefreshToken,
+    removeRefreshToken} = require('../repositories/user.repository');
 const { hashPassword, comparePassword } = require('../utils/password.util');
 const { generateAccessToken, generateRefreshToken, verifyRefreshToken } = require('../utils/token.util');
 const AppError = require('../utils/appError.util');
@@ -92,9 +97,21 @@ const handleRefreshToken = async (refreshToken) => {
     
 
 }
+
+const handleLogout = async (userId) => {
+    const user = removeRefreshToken(userId);
+    console.log(user);
+    if(!user){
+        throw new AppError("fail to delete refresh token", StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+    return {
+        message: "user logged out successfully"
+    }
+}
 module.exports = {
     handleRegister,
     handleLogin,
     handleMe,
-    handleRefreshToken
+    handleRefreshToken,
+    handleLogout
 }
