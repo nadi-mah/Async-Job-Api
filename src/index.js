@@ -6,10 +6,12 @@ dotenv.config();
 const app = express();
 
 const authRoute = require('./routes/auth.route');
+const jobRoute = require('./routes/job.route');
 
 app.use(express.json());
 
 app.use('/auth', authRoute);
+app.use('/jobs', jobRoute);
 
 const PORT = process.env.PORT ?? 3000;
 
