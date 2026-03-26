@@ -69,7 +69,7 @@ const me = async (req, res) => {
     }
 
 }
-const refreshToken = async (req, res) => {
+const refreshAccessToken = async (req, res) => {
     try {
         const {refreshToken}= req.body;
 
@@ -92,7 +92,7 @@ const logout = async (req, res) => {
 
         const result = await handleLogout(userId);
         return res.status(StatusCodes.OK).json(result);
-        
+
     } catch (error) {
         return res.status(error.statusCode || StatusCodes.INTERNAL_SERVER_ERROR).json({
             message: error.message || "something went wrong!"
@@ -103,6 +103,6 @@ module.exports = {
     register,
     login, 
     me,
-    refreshToken,
+    refreshAccessToken,
     logout
 }

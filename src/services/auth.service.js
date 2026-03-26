@@ -76,12 +76,14 @@ const handleMe = async (userId) => {
 }
 
 const handleRefreshToken = async (refreshToken) => {
-    console.log(refreshToken)
     const {userId} = verifyRefreshToken(refreshToken);
 
     const user = findUserByUserId(userId);
+    if(!user){
+        throw new AppError("User not found", StatusCodes.NOT_FOUND);
+    }
 
-    if(!user.refreshToken === refreshToken){
+    if(user.refreshToken !== refreshToken){
         throw new AppError("invalid refresh token", StatusCodes.UNAUTHORIZED);
     }
 
@@ -100,7 +102,6 @@ const handleRefreshToken = async (refreshToken) => {
 
 const handleLogout = async (userId) => {
     const user = removeRefreshToken(userId);
-    console.log(user);
     if(!user){
         throw new AppError("fail to delete refresh token", StatusCodes.INTERNAL_SERVER_ERROR);
     }
