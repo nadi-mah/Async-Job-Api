@@ -7,6 +7,7 @@ const app = express();
 
 const authRoute = require('./routes/auth.route');
 const jobRoute = require('./routes/job.route');
+const { processJobs } = require('./workers/job.worker');
 
 app.use(express.json());
 
@@ -15,6 +16,7 @@ app.use('/jobs', jobRoute);
 
 const PORT = process.env.PORT ?? 3000;
 
+processJobs();
 app.listen(PORT, () => {
     console.log(`app listening on port ${PORT}...`)
 })

@@ -11,9 +11,26 @@ const findJobById = (jobId) => {
 const findAllJobsByUserId = (userId) => {
     return jobs.filter(job => job.ownerId === userId);
 }
+const findPendingJobs = () => {
+    return jobs.filter(job => job.status === 'pending');
+}
+const updateJobStatus = (jobId, newStatus) => {
+    const index = jobs.findIndex(job => job.id === jobId);
+    if(index === -1){
+        return null;
+    } 
+    jobs[index] = {
+        ...jobs[index],
+        status: newStatus,
+        updatedAt: new Date()
+    };
+
+}
 
 module.exports = {
     createJob,
     findJobById,
-    findAllJobsByUserId
+    findAllJobsByUserId,
+    findPendingJobs,
+    updateJobStatus
 }
