@@ -1,4 +1,5 @@
 const {handleCreateJob, handleGetJob, handleGetAllJobs} = require('../services/job.service');
+const {handleGetAllJobEvents} = require('../services/jobEvent.service');
 
 const {StatusCodes} = require('http-status-codes');
 
@@ -44,8 +45,23 @@ const getAllJobs = async(req, res) => {
     }
 }
 
+const getAllJobEvents = async (req, res) => {
+    try {
+        const {userId} = req.user;
+        const {id} = req.params;
+        
+        const result = await handleGetAllJobEvents(userId, id);
+        return res.status(StatusCodes.OK).json(result);
+    } catch (error) {
+        return res.status(error.statusCode || StatusCodes.INTERNAL_SERVER_ERROR).json({
+            message: error.message || "something went wrong!"
+        })
+    } 
+}
+
 module.exports = {
     createJob,
     getJob,
-    getAllJobs
+    getAllJobs,
+    getAllJobEvents
 }

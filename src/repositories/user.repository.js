@@ -5,7 +5,6 @@ const findUserByUserName = (username)=>{
 }
 const createUser = (newUser)=>{
     users.push(newUser);
-    console.log(users);
     return true;
 }
 const findUserByUserId = (userId) => {

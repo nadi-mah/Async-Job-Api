@@ -1,6 +1,8 @@
 const { StatusCodes } = require('http-status-codes');
 const { createJob, findJobById, findAllJobsByUserId } = require('../repositories/job.repository');
+const {handleCreateJobEvent} = require('./jobEvent.service');
 
+const {JOB_STATUS, JOB_EVENTS} = require('../constants/job.constant');
 const AppError = require('../utils/appError.util');
 
 const { v4: uuidv4 } = require('uuid')
@@ -10,12 +12,13 @@ const handleCreateJob = async(userId) => {
     const newJob = {
         id: uuidv4(),
         ownerId: userId,
-        status: 'pending',
+        status: JOB_STATUS.PENDING,
         createdAt: new Date(),
         updatedAt: new Date()
     }
 
     const result = createJob(newJob);
+    handleCreateJobEvent(newJob.id, JOB_EVENTS.CREATED);
     if(!result){
         throw new AppError("Failed to create the job", StatusCodes.INTERNAL_SERVER_ERROR);
     }

@@ -1,0 +1,18 @@
+const JOB_STATUS = {
+    PENDING: 'pending',
+    PROCESSING: 'processing',
+    DONE: 'done',
+    FAILED: 'failed'
+};
+
+const JOB_EVENTS = {
+    CREATED: 'JOB_CREATED',
+    PROCESSING_STARTED: 'JOB_PROCESSING_STARTED',
+    COMPLETED: 'JOB_COMPLETED',
+    FAILED: 'JOB_FAILED'
+};
+
+module.exports = {
+    JOB_STATUS,
+    JOB_EVENTS
+}
