@@ -2,7 +2,6 @@ const jobs = [];
 
 const createJob = (newJob) => {
     jobs.push(newJob);
-    console.log(newJob)
     return true;
 }
 

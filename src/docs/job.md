@@ -1,29 +1,44 @@
 ### **Overview:**
-#### This project is for enterning jobs from client and put them in the queue for processing.
- - focus on authorization, to establish ownership of each job
- - only the owner of a job can see their jobs
+#### This project is an **asynchronous job processing API**. Clients can create jobs, which are stored and later processed by the system.
 
- - Job model:
-    ```javascript
-    (id, ownerId, status, createdAt, updatedAt)
-    ```
+### **Key concepts:**
+ - Authentication & Authorization
+ - Each job has an owner => Authorization
+ - Users can only access their own jobs
 
-### **Flow:**
+### **Job model:**
+```javascript
+    {
+        id: string,
+        ownerId: string,
+        status: 'pending' | 'processing' | 'done' | 'failed',
+        createdAt: Date,
+        updatedAt: Date
+    }
+```
+- *Note: ownerId is derived from the authenticated user (JWT), not from client input*
+### **API Endpoints:**
 
 **create a job**
 
 ```javascript
 POST /jobs
 ```
+ - Protected route
+ - Creates a new job for the authenticated user
 
-**read jobs**
+**Get All Jobs (Owned by User)**
 
 ```javascript
 GET /jobs
 ```
+ - Protected route
+ - Returns only jobs belonging to the current user
 
-**read a job**
+**Get Single Job**
 
 ```javascript
 GET /job/:id
 ```
+ - Protected route
+ - Returns the job only if it belongs to the current user

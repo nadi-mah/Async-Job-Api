@@ -10,7 +10,7 @@ const handleCreateJob = async(userId) => {
     const newJob = {
         id: uuidv4(),
         ownerId: userId,
-        status: 0,
+        status: 'pending',
         createdAt: new Date(),
         updatedAt: new Date()
     }
@@ -44,7 +44,7 @@ const handleGetJob = async(userId, jobId) => {
 
 const handleGetAllJobs = async(userId) => {
     const jobs = findAllJobsByUserId(userId);
-    if(!jobs){
+    if(jobs.length === 0){
         throw new AppError("no job found", StatusCodes.NOT_FOUND);
     }
     return {
