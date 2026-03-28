@@ -10,8 +10,23 @@
 
 
 ### **Job Processing Flow:**
-When the worker finds a job with status `pending` it will 1. Pick the first pending job 2. Change its status to `processing` 3. Simulate processing 4. Update the final status to either `done/failed`
+When the worker finds an **eligible job** — meaning a job that:
+- is in `pending` status
+- has `attempts` less than `maxAttempts`
+- and its `nextRunAt` has already passed
 
+it will:
+
+1. Pick the first eligible job
+2. Change its status to `processing`
+3. Increase its `attempts` count
+4. Simulate the processing
+
+If the process succeeds, the job status changes to `done`.
+
+If the process fails, and the new attempt count is still less than `maxAttempts`, the job goes back to `pending` again and its `nextRunAt` is set to **5 seconds later**, so it can be picked up and processed again in the next cycle.
+
+If the job has already reached its `maxAttempts`, its status changes to `failed`.
 
 ### **Current Worker Behavior:**
 #### The current worker is serial. This means:
@@ -23,7 +38,7 @@ When the worker finds a job with status `pending` it will 1. Pick the first pend
  - Lower chance of race conditions
 
 
-#### Why Serial Processing Helps:
+#### **Why Serial Processing Helps:**
 Since only one job is processed at a time:
  - Two workers cannot update the same job simultaneously
  - Job state transitions remain predictable

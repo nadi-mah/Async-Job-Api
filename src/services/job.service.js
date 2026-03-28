@@ -13,6 +13,9 @@ const handleCreateJob = async(userId) => {
         id: uuidv4(),
         ownerId: userId,
         status: JOB_STATUS.PENDING,
+        attempts: 0,
+        maxAttempts: 3,
+        nextRunAt: new Date(),
         createdAt: new Date(),
         updatedAt: new Date()
     }

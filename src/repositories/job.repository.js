@@ -11,17 +11,20 @@ const findJobById = (jobId) => {
 const findAllJobsByUserId = (userId) => {
     return jobs.filter(job => job.ownerId === userId);
 }
-const findPendingJobs = () => {
-    return jobs.filter(job => job.status === 'pending');
+const findPendingAndEligibleJobs = () => {
+    return jobs.filter(job => 
+        job.status === 'pending' && 
+        job.nextRunAt <= new Date()  && 
+        job.attempts < job.maxAttempts);
 }
-const updateJobStatus = (jobId, newStatus) => {
+const updateJob = (jobId, field, newValue) => {
     const index = jobs.findIndex(job => job.id === jobId);
     if(index === -1){
         return null;
     } 
     jobs[index] = {
         ...jobs[index],
-        status: newStatus,
+        [field]: newValue,
         updatedAt: new Date()
     };
 
@@ -31,6 +34,6 @@ module.exports = {
     createJob,
     findJobById,
     findAllJobsByUserId,
-    findPendingJobs,
-    updateJobStatus
+    findPendingAndEligibleJobs,
+    updateJob
 }

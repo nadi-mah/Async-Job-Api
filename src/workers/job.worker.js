@@ -1,27 +1,42 @@
-const {findPendingJobs, updateJobStatus} = require('../repositories/job.repository');
+const {findPendingAndEligibleJobs, updateJob} = require('../repositories/job.repository');
 const {handleCreateJobEvent} = require('../services/jobEvent.service');
 
 const {JOB_STATUS, JOB_EVENTS} = require('../constants/job.constant');
 const processJobs = async() => {
 
     while (true){
-        const jobs = findPendingJobs();
+        const jobs = findPendingAndEligibleJobs();
         if(jobs.length === 0){
             await sleep(5000);
             continue;
         }else{
-            const firstJobId = jobs[0].id; //first in the queue
-            updateJobStatus(firstJobId, JOB_STATUS.PROCESSING);
-            handleCreateJobEvent(firstJobId, JOB_EVENTS.PROCESSING_STARTED);
+            const firstJob = jobs[0]; //first in the queue
+
+            updateJob(firstJob.id, 'status', JOB_STATUS.PROCESSING);
+            const newAttempts = firstJob.attempts + 1;
+            updateJob(firstJob.id, 'attempts', newAttempts);
+            handleCreateJobEvent(firstJob.id, JOB_EVENTS.PROCESSING_STARTED);
         
             await sleep(7000);
+
             const randomNumber = Math.floor(Math.random()*10);
+            // Job Success
             if(randomNumber % 2 === 0){
-                updateJobStatus(firstJobId, JOB_STATUS.DONE);
-                handleCreateJobEvent(firstJobId, JOB_EVENTS.COMPLETED);
+                updateJob(firstJob.id, 'status', JOB_STATUS.DONE);
+                handleCreateJobEvent(firstJob.id, JOB_EVENTS.COMPLETED);
             }else{
-                updateJobStatus(firstJobId, JOB_STATUS.FAILED);
-                handleCreateJobEvent(firstJobId, JOB_EVENTS.FAILED);
+                // Job Retry
+                if(newAttempts < firstJob.maxAttempts){
+                    updateJob(firstJob.id, 'status', JOB_STATUS.PENDING);
+                    updateJob(firstJob.id, 'nextRunAt', new Date(Date.now() + 5000));
+                    handleCreateJobEvent(firstJob.id, JOB_EVENTS.RETRY);
+                    
+                // Job Failure    
+                }else{
+                    updateJob(firstJob.id, 'status', JOB_STATUS.FAILED);
+                    handleCreateJobEvent(firstJob.id, JOB_EVENTS.FAILED);
+                }
+
             }
         }
 

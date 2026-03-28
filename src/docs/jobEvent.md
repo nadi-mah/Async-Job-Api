@@ -11,7 +11,7 @@ Storing events allows us to:
     {
         id: string,
         jobId: string,
-        type: 'JOB_CREATED' | 'JOB_PROCESSING_STARTED' | 'JOB_COMPLETED' | 'JOB_FAILED',
+        type: 'JOB_CREATED' | 'JOB_PROCESSING_STARTED' | 'JOB_COMPLETED' | 'JOB_FAILED' | 'JOB_RETRY_SCHEDULED',
         createdAt: Date,
     }
 ```

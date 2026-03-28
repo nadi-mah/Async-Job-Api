@@ -12,6 +12,9 @@
         id: string,
         ownerId: string,
         status: 'pending' | 'processing' | 'done' | 'failed',
+        attempts: number,
+        maxAttempts: number,
+        nextRunAt: Date,
         createdAt: Date,
         updatedAt: Date
     }
