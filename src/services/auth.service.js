@@ -12,7 +12,7 @@ const { v4: uuidv4 } = require('uuid')
 const {StatusCodes} = require('http-status-codes');
 
 const handleRegister = async (username, password)=>{
-    const user = findUserByUserName(username);
+    const user = await findUserByUserName(username);
     if(user){
         throw new AppError("User already exists", StatusCodes.CONFLICT);
     }
@@ -24,7 +24,7 @@ const handleRegister = async (username, password)=>{
         createdAt: new Date(),
         updatedAt: new Date()
     }
-    const result = createUser(newUser);
+    const result = await createUser(newUser);
     if(!result){
         throw new AppError("Failed to create user", StatusCodes.INTERNAL_SERVER_ERROR);
     }
@@ -37,7 +37,7 @@ const handleRegister = async (username, password)=>{
 }
 
 const handleLogin = async (username, password)=>{
-    const user = findUserByUserName(username);
+    const user = await findUserByUserName(username);
     if(!user){
         throw new AppError("User not found", StatusCodes.NOT_FOUND);
     }
@@ -49,7 +49,7 @@ const handleLogin = async (username, password)=>{
     const accessToken = generateAccessToken(user.id, user.username);
     const refreshToken = generateRefreshToken(user.id);
 
-    const updatedUser = saveRefreshToken(user.id, refreshToken);
+    const updatedUser = await saveRefreshToken(user.id, refreshToken);
     if(!updatedUser){
         throw new AppError("Failed to update user", StatusCodes.INTERNAL_SERVER_ERROR);
     }
@@ -65,7 +65,7 @@ const handleLogin = async (username, password)=>{
 }
 
 const handleMe = async (userId) => {
-    const user = findUserByUserId(userId);
+    const user = await findUserByUserId(userId);
     if(!user){
         throw new AppError("User not found", StatusCodes.NOT_FOUND);
     }
@@ -78,7 +78,7 @@ const handleMe = async (userId) => {
 const handleRefreshToken = async (refreshToken) => {
     const {userId} = verifyRefreshToken(refreshToken);
 
-    const user = findUserByUserId(userId);
+    const user = await findUserByUserId(userId);
     if(!user){
         throw new AppError("User not found", StatusCodes.NOT_FOUND);
     }
@@ -101,7 +101,7 @@ const handleRefreshToken = async (refreshToken) => {
 }
 
 const handleLogout = async (userId) => {
-    const user = removeRefreshToken(userId);
+    const user = await removeRefreshToken(userId);
     if(!user){
         throw new AppError("fail to delete refresh token", StatusCodes.INTERNAL_SERVER_ERROR);
     }

@@ -2,6 +2,7 @@ const {createJobEvent, findJobEventByJobId} = require('../repositories/jobEvent.
 const {findJobById} = require('../repositories/job.repository');
 
 const { v4: uuidv4 } = require('uuid')
+const AppError = require('../utils/appError.util');
 
 const handleCreateJobEvent = async (jobId, eventType) => {
     const newEvent = {
@@ -11,7 +12,7 @@ const handleCreateJobEvent = async (jobId, eventType) => {
         createdAt: new Date()
     }
 
-    const event = createJobEvent(newEvent);
+    const event = await createJobEvent(newEvent);
     if(!event){
         console.log('failed to log event');
     }
@@ -19,7 +20,7 @@ const handleCreateJobEvent = async (jobId, eventType) => {
 }
 
 const handleGetAllJobEvents = async (userId, jobId) => {
-    const job = findJobById(jobId);
+    const job = await findJobById(jobId);
     if(!job){
         throw new AppError("job not found", StatusCodes.NOT_FOUND);
     }
@@ -27,7 +28,7 @@ const handleGetAllJobEvents = async (userId, jobId) => {
         throw new AppError("access denied", StatusCodes.FORBIDDEN);
     }
 
-    const jobEvents = findJobEventByJobId(jobId);
+    const jobEvents = await findJobEventByJobId(jobId);
     
     return {
         data: jobEvents

@@ -20,7 +20,7 @@ const handleCreateJob = async(userId) => {
         updatedAt: new Date()
     }
 
-    const result = createJob(newJob);
+    const result = await createJob(newJob);
     handleCreateJobEvent(newJob.id, JOB_EVENTS.CREATED);
     if(!result){
         throw new AppError("Failed to create the job", StatusCodes.INTERNAL_SERVER_ERROR);
@@ -36,7 +36,7 @@ const handleCreateJob = async(userId) => {
 
 }
 const handleGetJob = async(userId, jobId) => {
-    const job = findJobById(jobId);
+    const job = await findJobById(jobId);
     if(!job){
         throw new AppError("job not found", StatusCodes.NOT_FOUND);
     }
@@ -49,7 +49,7 @@ const handleGetJob = async(userId, jobId) => {
 }
 
 const handleGetAllJobs = async(userId) => {
-    const jobs = findAllJobsByUserId(userId);
+    const jobs = await findAllJobsByUserId(userId);
     if(jobs.length === 0){
         throw new AppError("no job found", StatusCodes.NOT_FOUND);
     }
