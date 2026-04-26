@@ -7,21 +7,30 @@ const AppError = require('../utils/appError.util');
 
 const { v4: uuidv4 } = require('uuid')
 
+const { withTransaction } = require('../utils/transaction.util');
+
 
 const handleCreateJob = async(userId) => {
-    const newJob = {
-        id: uuidv4(),
-        ownerId: userId,
-        status: JOB_STATUS.PENDING,
-        attempts: 0,
-        maxAttempts: 3,
-        nextRunAt: new Date(),
-        createdAt: new Date(),
-        updatedAt: new Date()
-    }
 
-    const result = await createJob(newJob);
-    handleCreateJobEvent(newJob.id, JOB_EVENTS.CREATED);
+    const result = await withTransaction(async (client) => {
+        const newJob = {
+            id: uuidv4(),
+            ownerId: userId,
+            status: JOB_STATUS.PENDING,
+            attempts: 0,
+            maxAttempts: 3,
+            nextRunAt: new Date(),
+            createdAt: new Date(),
+            updatedAt: new Date()
+        }
+    
+        const result = await createJob(client, newJob);
+        throw new Error('TEST_TRANSACTION_ROLLBACK');
+        await handleCreateJobEvent(newJob.id, JOB_EVENTS.CREATED, client);
+        
+        return result;
+    })
+
     if(!result){
         throw new AppError("Failed to create the job", StatusCodes.INTERNAL_SERVER_ERROR);
     }

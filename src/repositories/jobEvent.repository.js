@@ -16,8 +16,8 @@ const findJobEventByJobId = async (jobId) => {
 //     jobEvents.push(newEvent);
 //     return newEvent;
 // }
-const createJobEvent = async (newEvent) => {
-    const result = await pool.query(
+const createJobEvent = async (db, newEvent) => {
+    const result = await db.query(
         'INSERT INTO job_events (id, job_id, type, created_at) VALUES ($1, $2, $3, $4) RETURNING *',
         [newEvent.id, newEvent.jobId, newEvent.type, newEvent.createdAt]
     );

@@ -4,7 +4,9 @@ const {findJobById} = require('../repositories/job.repository');
 const { v4: uuidv4 } = require('uuid')
 const AppError = require('../utils/appError.util');
 
-const handleCreateJobEvent = async (jobId, eventType) => {
+const pool = require('../config/db');
+
+const handleCreateJobEvent = async (jobId, eventType, db = pool) => {
     const newEvent = {
         id: uuidv4(),
         jobId: jobId,
@@ -12,7 +14,7 @@ const handleCreateJobEvent = async (jobId, eventType) => {
         createdAt: new Date()
     }
 
-    const event = await createJobEvent(newEvent);
+    const event = await createJobEvent(db, newEvent);
     if(!event){
         console.log('failed to log event');
     }

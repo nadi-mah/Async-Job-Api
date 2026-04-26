@@ -44,8 +44,8 @@ const findPendingAndEligibleJobs = async () => {
 //     jobs.push(newJob);
 //     return true;
 // }
-const createJob = async (newJob) => {
-    const result = await pool.query(
+const createJob = async (db, newJob) => {
+    const result = await db.query(
         'INSERT INTO jobs (id, owner_id, status, attempts, max_attempts, next_run_at, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
         [newJob.id, newJob.ownerId, newJob.status, newJob.attempts, newJob.maxAttempts, newJob.nextRunAt, newJob.createdAt, newJob.updatedAt]
 
