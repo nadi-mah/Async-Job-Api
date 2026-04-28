@@ -1,6 +1,8 @@
 const {findPendingAndEligibleJobs, updateJob} = require('../repositories/job.repository');
 const {handleCreateJobEvent} = require('../services/jobEvent.service');
 
+const {withTransaction} = require('../utils/transaction.util');
+
 const {JOB_STATUS, JOB_EVENTS} = require('../constants/job.constant');
 const processJobs = async() => {
 
@@ -12,29 +14,38 @@ const processJobs = async() => {
         }else{
             const firstJob = jobs[0]; //first in the queue
 
-            await updateJob(firstJob.id, 'status', JOB_STATUS.PROCESSING);
             const newAttempts = firstJob.attempts + 1;
-            await updateJob(firstJob.id, 'attempts', newAttempts);
-            await handleCreateJobEvent(firstJob.id, JOB_EVENTS.PROCESSING_STARTED);
+            await withTransaction(async (client) => {
+                await updateJob(client, firstJob.id, 'status', JOB_STATUS.PROCESSING);
+                await updateJob(client, firstJob.id, 'attempts', newAttempts);
+                await handleCreateJobEvent(firstJob.id, JOB_EVENTS.PROCESSING_STARTED, client);
+            })
         
             await sleep(7000);
 
             const randomNumber = Math.floor(Math.random()*10);
+
             // Job Success
             if(randomNumber % 2 === 0){
-                await updateJob(firstJob.id, 'status', JOB_STATUS.DONE);
-                await handleCreateJobEvent(firstJob.id, JOB_EVENTS.COMPLETED);
+                await withTransaction(async(client) => {
+                    await updateJob(client, firstJob.id, 'status', JOB_STATUS.DONE);
+                    await handleCreateJobEvent(firstJob.id, JOB_EVENTS.COMPLETED, client);
+                })
             }else{
                 // Job Retry
                 if(newAttempts < firstJob.max_attempts){
-                    await updateJob(firstJob.id, 'status', JOB_STATUS.PENDING);
-                    await updateJob(firstJob.id, 'nextRunAt', new Date(Date.now() + 5000));
-                    await handleCreateJobEvent(firstJob.id, JOB_EVENTS.RETRY);
+                    await withTransaction(async(client) => {
+                        await updateJob(client, firstJob.id, 'nextRunAt', new Date(Date.now() + 5000));
+                        await updateJob(client, firstJob.id, 'status', JOB_STATUS.PENDING);
+                        await handleCreateJobEvent(firstJob.id, JOB_EVENTS.RETRY, client);
+                    })
                     
                 // Job Failure    
                 }else{
-                    await updateJob(firstJob.id, 'status', JOB_STATUS.FAILED);
-                    await handleCreateJobEvent(firstJob.id, JOB_EVENTS.FAILED);
+                    await withTransaction(async(client) => {
+                        await updateJob(client, firstJob.id, 'status', JOB_STATUS.FAILED);
+                        await handleCreateJobEvent(firstJob.id, JOB_EVENTS.FAILED, client);
+                    })
                 }
 
             }

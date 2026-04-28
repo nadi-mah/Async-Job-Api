@@ -66,7 +66,7 @@ const createJob = async (db, newJob) => {
 //     };
 
 // }
-const updateJob = async (jobId, field, newValue) => {
+const updateJob = async (db = pool, jobId, field, newValue) => {
     const fieldMap = {
         status: 'status',
         attempts: 'attempts',
@@ -78,7 +78,7 @@ const updateJob = async (jobId, field, newValue) => {
     if (!dbField) {
         throw new Error('Invalid field');
     }
-    const result = await pool.query(
+    const result = await db.query(
         `UPDATE jobs SET ${dbField} = $1 WHERE id = $2 RETURNING *`,
         [newValue, jobId]
     );

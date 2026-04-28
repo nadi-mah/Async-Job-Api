@@ -25,7 +25,7 @@ const handleCreateJob = async(userId) => {
         }
     
         const result = await createJob(client, newJob);
-        throw new Error('TEST_TRANSACTION_ROLLBACK');
+        // throw new Error('TEST_TRANSACTION_ROLLBACK');
         await handleCreateJobEvent(newJob.id, JOB_EVENTS.CREATED, client);
         
         return result;
