@@ -8,15 +8,20 @@ const app = express();
 const authRoute = require('./routes/auth.route');
 const jobRoute = require('./routes/job.route');
 const { processJobs } = require('./workers/job.worker');
+// const { connectRedis } = require('./config/redis');
 
 app.use(express.json());
 
 app.use('/auth', authRoute);
 app.use('/jobs', jobRoute);
 
+
 const PORT = process.env.PORT ?? 3000;
 
 processJobs();
+
+// await connectRedis();
+    
 app.listen(PORT, () => {
     console.log(`app listening on port ${PORT}...`)
 })
