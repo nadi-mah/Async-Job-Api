@@ -10,6 +10,7 @@ const { v4: uuidv4 } = require('uuid')
 const { withTransaction } = require('../utils/transaction.util');
 
 
+
 const handleCreateJob = async(userId) => {
 
     const result = await withTransaction(async (client) => {
@@ -38,20 +39,22 @@ const handleCreateJob = async(userId) => {
     return {
         message: "job created successfully",
         data: {
-            id: newJob.id, 
-            createdTime: newJob.createdAt
+            id: result.id, 
+            createdTime: result.createdAt
         }
     };
 
 }
 const handleGetJob = async(userId, jobId) => {
     const job = await findJobById(jobId);
+
     if(!job){
         throw new AppError("job not found", StatusCodes.NOT_FOUND);
     }
-    if(job.ownerId !== userId){
+    if(job.owner_id !== userId){
         throw new AppError("access denied", StatusCodes.FORBIDDEN);
     }
+
     return {
         data: job
     }

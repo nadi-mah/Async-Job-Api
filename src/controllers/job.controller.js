@@ -3,6 +3,8 @@ const {handleGetAllJobEvents} = require('../services/jobEvent.service');
 
 const {StatusCodes} = require('http-status-codes');
 
+const store = require('../utils/inMemoryStore');
+
 const createJob = async(req, res) => {
     try {
         const {userId} = req.user;
@@ -23,6 +25,11 @@ const getJob = async(req, res) => {
         const {id} = req.params;
 
         const result = await handleGetJob(userId, id);
+
+        const key = `user:${userId}:job:${id}`;
+        const ttl = 15 * 1000;
+        store.set(key, result.data, ttl);
+    
         return res.status(StatusCodes.OK).json(result);
     } catch (error) {
         return res.status(error.statusCode || StatusCodes.INTERNAL_SERVER_ERROR).json({

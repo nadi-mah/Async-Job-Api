@@ -3,6 +3,8 @@ const {handleCreateJobEvent} = require('../services/jobEvent.service');
 
 const {withTransaction} = require('../utils/transaction.util');
 
+const store = require('../utils/inMemoryStore');
+
 const {JOB_STATUS, JOB_EVENTS} = require('../constants/job.constant');
 const processJobs = async() => {
 
@@ -20,6 +22,8 @@ const processJobs = async() => {
                 await updateJob(client, firstJob.id, 'attempts', newAttempts);
                 await handleCreateJobEvent(firstJob.id, JOB_EVENTS.PROCESSING_STARTED, client);
             })
+            const key = `user:${firstJob.owner_id}:job:${firstJob.id}`;
+            store.del(key);
         
             await sleep(7000);
 
@@ -31,6 +35,7 @@ const processJobs = async() => {
                     await updateJob(client, firstJob.id, 'status', JOB_STATUS.DONE);
                     await handleCreateJobEvent(firstJob.id, JOB_EVENTS.COMPLETED, client);
                 })
+                store.del(key);
             }else{
                 // Job Retry
                 if(newAttempts < firstJob.max_attempts){
@@ -39,6 +44,7 @@ const processJobs = async() => {
                         await updateJob(client, firstJob.id, 'status', JOB_STATUS.PENDING);
                         await handleCreateJobEvent(firstJob.id, JOB_EVENTS.RETRY, client);
                     })
+                    store.del(key);
                     
                 // Job Failure    
                 }else{
@@ -46,6 +52,7 @@ const processJobs = async() => {
                         await updateJob(client, firstJob.id, 'status', JOB_STATUS.FAILED);
                         await handleCreateJobEvent(firstJob.id, JOB_EVENTS.FAILED, client);
                     })
+                    store.del(key);
                 }
 
             }
