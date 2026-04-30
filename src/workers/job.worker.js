@@ -2,10 +2,12 @@ const {findPendingAndEligibleJobs, updateJob} = require('../repositories/job.rep
 const {handleCreateJobEvent} = require('../services/jobEvent.service');
 
 const {withTransaction} = require('../utils/transaction.util');
-
 const store = require('../utils/inMemoryStore');
 
 const {JOB_STATUS, JOB_EVENTS} = require('../constants/job.constant');
+
+const {jobCacheKey, allJobsCacheKey} = require('../helper/jobCacheKey.helper');
+
 const processJobs = async() => {
 
     while (true){
@@ -22,8 +24,12 @@ const processJobs = async() => {
                 await updateJob(client, firstJob.id, 'attempts', newAttempts);
                 await handleCreateJobEvent(firstJob.id, JOB_EVENTS.PROCESSING_STARTED, client);
             })
-            const key = `user:${firstJob.owner_id}:job:${firstJob.id}`;
+
+            // const key = `user:${firstJob.owner_id}:job:${firstJob.id}`;
+            const key = jobCacheKey(firstJob.owner_id, firstJob.id);
+            const allJobsKey = allJobsCacheKey(firstJob.owner_id);
             store.del(key);
+            store.del(allJobsKey);
         
             await sleep(7000);
 
@@ -36,6 +42,7 @@ const processJobs = async() => {
                     await handleCreateJobEvent(firstJob.id, JOB_EVENTS.COMPLETED, client);
                 })
                 store.del(key);
+                store.del(allJobsKey);
             }else{
                 // Job Retry
                 if(newAttempts < firstJob.max_attempts){
@@ -45,6 +52,7 @@ const processJobs = async() => {
                         await handleCreateJobEvent(firstJob.id, JOB_EVENTS.RETRY, client);
                     })
                     store.del(key);
+                    store.del(allJobsKey);
                     
                 // Job Failure    
                 }else{
@@ -53,6 +61,7 @@ const processJobs = async() => {
                         await handleCreateJobEvent(firstJob.id, JOB_EVENTS.FAILED, client);
                     })
                     store.del(key);
+                    store.del(allJobsKey);
                 }
 
             }
