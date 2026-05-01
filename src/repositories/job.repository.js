@@ -85,10 +85,37 @@ const updateJob = async (db = pool, jobId, field, newValue) => {
     return result.rows[0]
 }
 
+const claimEligibleJobs = async(db = pool, limit) => {
+    const result = await db.query(
+        `
+        WITH picked AS (
+          SELECT id
+          FROM jobs
+          WHERE status = $1
+            AND next_run_at <= NOW()
+            AND attempts < max_attempts
+          ORDER BY created_at ASC
+          FOR UPDATE SKIP LOCKED
+          LIMIT $2
+        )
+        UPDATE jobs
+        SET 
+          status = $3,
+          attempts = attempts + 1,
+          updated_at = NOW()
+        WHERE id IN (SELECT id FROM picked)
+        RETURNING *
+        `,
+        [JOB_STATUS.PENDING, limit, JOB_STATUS.PROCESSING]
+      );
+    return result.rows;
+}
+
 module.exports = {
     createJob,
     findJobById,
     findAllJobsByUserId,
     findPendingAndEligibleJobs,
-    updateJob
+    updateJob,
+    claimEligibleJobs
 }

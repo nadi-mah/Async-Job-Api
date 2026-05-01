@@ -10,6 +10,7 @@ const jobRoute = require('./routes/job.route');
 const dashboardRoute = require('./routes/dashboard.route');
 
 const { processJobs } = require('./workers/job.worker');
+const {processJobsConcurrent} = require('./workers/concurrentJob.worker');
 // const { connectRedis } = require('./config/redis');
 
 app.use(express.json());
@@ -21,7 +22,8 @@ app.use('/dashboard', dashboardRoute);
 
 const PORT = process.env.PORT ?? 3000;
 
-processJobs();
+// processJobs();
+processJobsConcurrent();
 
 // await connectRedis();
     
