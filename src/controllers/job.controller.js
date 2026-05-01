@@ -1,4 +1,4 @@
-const {handleCreateJob, handleGetJob, handleGetAllJobs} = require('../services/job.service');
+const {handleCreateJob, handleGetJob, handleGetAllJobs, handleCreateBulkJobs} = require('../services/job.service');
 const {handleGetAllJobEvents} = require('../services/jobEvent.service');
 
 const {StatusCodes} = require('http-status-codes');
@@ -77,9 +77,27 @@ const getAllJobEvents = async (req, res) => {
     } 
 }
 
+const createBulkJobs  = async (req, res) => {
+    try {
+        const {userId} = req.user;
+        const {count} = req.body;
+
+        const result = await handleCreateBulkJobs(userId, count);
+
+        res.status(StatusCodes.CREATED).json(result);
+
+
+    } catch (error) {
+        return res.status(error.statusCode || StatusCodes.INTERNAL_SERVER_ERROR).json({
+            message: error.message || "something went wrong!"
+        })
+    }
+}
+
 module.exports = {
     createJob,
     getJob,
     getAllJobs,
-    getAllJobEvents
+    getAllJobEvents,
+    createBulkJobs
 }
