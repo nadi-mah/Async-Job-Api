@@ -13,8 +13,17 @@ const POLL_INTERVAL_MS = 5000;
 const PROCESSING_TIME_MS = 7000;
 const RETRY_DELAY_MS = 5000;
 
-const processSingleJob = async(job) => {
+let isShuttingDown = false;
+
+const stopWorker = () => {
+    isShuttingDown = true;
+}
+
+const processSingleJob = async(job, workerId) => {
     // const key = `user:${firstJob.owner_id}:job:${firstJob.id}`;
+
+    console.log(`${workerId} started job ${job.id}`);
+
     const key = jobCacheKey(job.owner_id, job.id);
     const allJobsKey = allJobsCacheKey(job.owner_id);
     store.del(key);
@@ -54,11 +63,14 @@ const processSingleJob = async(job) => {
         }
 
     }
+    console.log(`${workerId} completed/failed/retried job ${job.id}`);
 }
 
-const processJobsConcurrent = async() => {
+const processJobsConcurrent = async(workerId) => {
 
-    while (true){
+    while (!isShuttingDown){
+
+        console.log(`${workerId} is checking jobs...`);
 
         const claimedJobs = await withTransaction(async(client) => {
             const jobs = await claimEligibleJobs(client, CONCURRENCY_LIMIT);
@@ -75,15 +87,19 @@ const processJobsConcurrent = async() => {
             continue;
         }
 
+        console.log(`${workerId} claimed ${claimedJobs.length} job(s)`);
+
         await Promise.all(
-            claimedJobs.map((job) => processSingleJob(job))
+            claimedJobs.map((job) => processSingleJob(job, workerId))
           );
 
     }
+    console.log(`${workerId} stopped gracefully`);
 }
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 module.exports = {
-    processJobsConcurrent
+    processJobsConcurrent,
+    stopWorker
 }
