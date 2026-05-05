@@ -40,9 +40,18 @@ const incr = (key, ttlMs) => {
   return newValue;
 };
 
+const delByPrefix = (prefix) => {
+  for (const key of store.keys()) {
+    if (key.startsWith(prefix)) {
+      store.delete(key);
+    }
+  }
+};
+
 module.exports = {
   get,
   set,
   del,
-  incr
+  incr,
+  delByPrefix
 };

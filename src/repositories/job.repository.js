@@ -25,6 +25,30 @@ const findAllJobsByUserId = async (userId) => {
     return result.rows;
 
 }
+const findAllJobsByUserIdPagination = async (userId, limit = 10, offset = 0) => {
+    const result = await pool.query(
+        'SELECT * FROM jobs WHERE owner_id = $1 ORDER BY created_at DESC, id DESC LIMIT $2 OFFSET $3',
+        [userId, limit, offset]
+    );
+    const totalResult = await pool.query(
+        `SELECT COUNT(*) FROM jobs WHERE owner_id = $1`,
+        [userId]
+    );
+    const total = parseInt(totalResult.rows[0].count);
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+        data: result.rows,
+        pagination: {
+          page: Math.floor(offset / limit) + 1,
+          limit: limit,
+          total: total,
+          totalPages: totalPages,
+          hasNext: offset + limit < total,
+          hasPrev: offset > 0
+        }
+    };
+}
 
 // const findPendingAndEligibleJobs = () => {
 //     return jobs.filter(job => 
@@ -115,6 +139,7 @@ module.exports = {
     createJob,
     findJobById,
     findAllJobsByUserId,
+    findAllJobsByUserIdPagination,
     findPendingAndEligibleJobs,
     updateJob,
     claimEligibleJobs

@@ -13,6 +13,7 @@ processJobsConcurrent(workerId).catch((error) => {
     process.exit(1);
   });
   
+// Graceful shutdown
 process.on('SIGINT', () => {
     console.log(`${workerId} received SIGINT`);
     stopWorker();

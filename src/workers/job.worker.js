@@ -27,9 +27,11 @@ const processJobs = async() => {
 
             // const key = `user:${firstJob.owner_id}:job:${firstJob.id}`;
             const key = jobCacheKey(firstJob.owner_id, firstJob.id);
-            const allJobsKey = allJobsCacheKey(firstJob.owner_id);
+            // const allJobsKey = allJobsCacheKey(firstJob.owner_id);
+            const prefix = `user:${firstJob.owner_id}:page`;
             store.del(key);
-            store.del(allJobsKey);
+            // store.del(allJobsKey);
+            store.delByPrefix(prefix);
         
             await sleep(7000);
 
@@ -42,7 +44,8 @@ const processJobs = async() => {
                     await handleCreateJobEvent(firstJob.id, JOB_EVENTS.COMPLETED, client);
                 })
                 store.del(key);
-                store.del(allJobsKey);
+                // store.del(allJobsKey);
+                store.delByPrefix(prefix);
             }else{
                 // Job Retry
                 if(newAttempts < firstJob.max_attempts){
@@ -52,7 +55,8 @@ const processJobs = async() => {
                         await handleCreateJobEvent(firstJob.id, JOB_EVENTS.RETRY, client);
                     })
                     store.del(key);
-                    store.del(allJobsKey);
+                    // store.del(allJobsKey);
+                    store.delByPrefix(prefix);
                     
                 // Job Failure    
                 }else{
@@ -61,7 +65,8 @@ const processJobs = async() => {
                         await handleCreateJobEvent(firstJob.id, JOB_EVENTS.FAILED, client);
                     })
                     store.del(key);
-                    store.del(allJobsKey);
+                    // store.del(allJobsKey);
+                    store.delByPrefix(prefix);
                 }
 
             }

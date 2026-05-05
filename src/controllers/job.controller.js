@@ -5,7 +5,7 @@ const {StatusCodes} = require('http-status-codes');
 
 const store = require('../utils/inMemoryStore');
 
-const {jobCacheKey, allJobsCacheKey} = require('../helper/jobCacheKey.helper');
+const {jobCacheKey, allJobsCacheKey, allJobsPaginationCacheKey} = require('../helper/jobCacheKey.helper');
 
 const createJob = async(req, res) => {
     try {
@@ -13,8 +13,10 @@ const createJob = async(req, res) => {
 
         const result = await handleCreateJob(userId);
 
-        const key = allJobsCacheKey(userId);
-        store.del(key);
+        // const key = allJobsCacheKey(userId);
+        const prefix = `user:${userId}:page`
+        // store.del(key);
+        store.delByPrefix(prefix);
 
         return res.status(StatusCodes.CREATED).json(result);
     } catch (error) {
@@ -48,10 +50,16 @@ const getJob = async(req, res) => {
 const getAllJobs = async(req, res) => {
     try {
         const {userId} = req.user;
-        
-        const result = await handleGetAllJobs(userId);
 
-        const key = allJobsCacheKey(userId);
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+
+        const offset = (page - 1) * limit;
+        
+        const result = await handleGetAllJobs(userId, limit, offset);
+
+        // const key = allJobsCacheKey(userId);
+        const key = allJobsPaginationCacheKey(userId, page, limit);
         const ttl = 15 * 1000;
         store.set(key, result.data, ttl);
 

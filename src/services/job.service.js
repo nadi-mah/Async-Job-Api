@@ -1,5 +1,5 @@
 const { StatusCodes } = require('http-status-codes');
-const { createJob, findJobById, findAllJobsByUserId } = require('../repositories/job.repository');
+const { createJob, findJobById, findAllJobsByUserId, findAllJobsByUserIdPagination } = require('../repositories/job.repository');
 const {handleCreateJobEvent} = require('./jobEvent.service');
 
 const {JOB_STATUS, JOB_EVENTS} = require('../constants/job.constant');
@@ -60,8 +60,10 @@ const handleGetJob = async(userId, jobId) => {
     }
 }
 
-const handleGetAllJobs = async(userId) => {
-    const jobs = await findAllJobsByUserId(userId);
+const handleGetAllJobs = async(userId, limit, offset) => {
+    // const jobs = await findAllJobsByUserId(userId);
+    const jobs = await findAllJobsByUserIdPagination(userId, limit, offset);
+    
     if(jobs.length === 0){
         throw new AppError("no job found", StatusCodes.NOT_FOUND);
     }

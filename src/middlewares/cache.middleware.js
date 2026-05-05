@@ -1,7 +1,7 @@
 const store = require('../utils/inMemoryStore');
 const {StatusCodes} = require('http-status-codes');
 
-const {jobCacheKey, allJobsCacheKey} = require('../helper/jobCacheKey.helper');
+const {jobCacheKey, allJobsCacheKey, allJobsPaginationCacheKey} = require('../helper/jobCacheKey.helper');
 
 const cachedJobs = async(req, res, next) => {
     const {id} = req.params;
@@ -21,8 +21,11 @@ const cachedJobs = async(req, res, next) => {
 
 const cacheAllJobs = async(req, res, next) => {
     const {userId} = req.user;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
 
-    const key = allJobsCacheKey(userId);
+    // const key = allJobsCacheKey(userId);
+    const key = allJobsPaginationCacheKey(userId, page, limit);
 
     const cachedJobsData = store.get(key);
 

@@ -25,9 +25,11 @@ const processSingleJob = async(job, workerId) => {
     console.log(`${workerId} started job ${job.id}`);
 
     const key = jobCacheKey(job.owner_id, job.id);
-    const allJobsKey = allJobsCacheKey(job.owner_id);
+    // const allJobsKey = allJobsCacheKey(job.owner_id);
+    const prefix = `user:${job.owner_id}:page`
     store.del(key);
-    store.del(allJobsKey);
+    // store.del(allJobsKey);
+    store.delByPrefix(prefix);
 
     await sleep(PROCESSING_TIME_MS);
 
@@ -40,7 +42,8 @@ const processSingleJob = async(job, workerId) => {
             await handleCreateJobEvent(job.id, JOB_EVENTS.COMPLETED, client);
         })
         store.del(key);
-        store.del(allJobsKey);
+        // store.del(allJobsKey);
+        store.delByPrefix(prefix);
     }else{
         // Job Retry
         if(job.attempts < job.max_attempts){
@@ -50,7 +53,8 @@ const processSingleJob = async(job, workerId) => {
                 await handleCreateJobEvent(job.id, JOB_EVENTS.RETRY, client);
             })
             store.del(key);
-            store.del(allJobsKey);
+            // store.del(allJobsKey);
+            store.delByPrefix(prefix);
             
         // Job Failure    
         }else{
@@ -59,7 +63,8 @@ const processSingleJob = async(job, workerId) => {
                 await handleCreateJobEvent(job.id, JOB_EVENTS.FAILED, client);
             })
             store.del(key);
-            store.del(allJobsKey);
+            // store.del(allJobsKey);
+            store.delByPrefix(prefix);
         }
 
     }
