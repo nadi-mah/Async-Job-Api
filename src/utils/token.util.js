@@ -29,7 +29,6 @@ const verifyAccessToken = (token) => {
 const verifyRefreshToken = (token) => {
     try {
         const {userId} = jwt.verify(token, process.env.REFRESH_TOKEN_SECRET);
-        console.log(userId)
         return {userId}
     } catch (error) {
         throw new AppError("invalid refresh token here", StatusCodes.UNAUTHORIZED);

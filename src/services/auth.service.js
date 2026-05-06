@@ -11,6 +11,10 @@ const AppError = require('../utils/appError.util');
 const { v4: uuidv4 } = require('uuid')
 const {StatusCodes} = require('http-status-codes');
 
+const store = require('../utils/inMemoryStore');
+
+const {refreshTokenCacheKey} = require('../helper/authCacheKey.helper');
+
 const handleRegister = async (username, password)=>{
     const user = await findUserByUserName(username);
     if(user){
@@ -49,10 +53,14 @@ const handleLogin = async (username, password)=>{
     const accessToken = generateAccessToken(user.id, user.username);
     const refreshToken = generateRefreshToken(user.id);
 
-    const updatedUser = await saveRefreshToken(user.id, refreshToken);
-    if(!updatedUser){
-        throw new AppError("Failed to update user", StatusCodes.INTERNAL_SERVER_ERROR);
-    }
+    const key = refreshTokenCacheKey(user.id);
+    const ttl = 7 * 24 * 60 * 60 * 1000;
+    store.set(key, refreshToken, ttl);
+
+    // const updatedUser = await saveRefreshToken(user.id, refreshToken);
+    // if(!updatedUser){
+    //     throw new AppError("Failed to update user", StatusCodes.INTERNAL_SERVER_ERROR);
+    // }
 
     return {
         message: "User logged in successfully", 
@@ -78,13 +86,26 @@ const handleMe = async (userId) => {
 const handleRefreshToken = async (refreshToken) => {
     const {userId} = verifyRefreshToken(refreshToken);
 
-    const user = await findUserByUserId(userId);
-    if(!user){
-        throw new AppError("User not found", StatusCodes.NOT_FOUND);
+    
+    const key = refreshTokenCacheKey(userId);
+    const cachedRefreshToken = store.get(key);
+
+
+    // if(user.refreshToken !== refreshToken){
+    //     throw new AppError("invalid refresh token", StatusCodes.UNAUTHORIZED);
+    // }
+    if(!cachedRefreshToken){
+        throw new AppError("invalid or expired refresh token", StatusCodes.UNAUTHORIZED);
+    }
+    
+    if(cachedRefreshToken !== refreshToken){
+        throw new AppError("invalid or expired refresh token", StatusCodes.UNAUTHORIZED);
     }
 
-    if(user.refreshToken !== refreshToken){
-        throw new AppError("invalid refresh token", StatusCodes.UNAUTHORIZED);
+    const user = await findUserByUserId(userId);
+
+    if(!user){
+        throw new AppError("invalid or expired refresh token", StatusCodes.UNAUTHORIZED);
     }
 
     const newAccessToken = generateAccessToken(userId, user.username);
@@ -96,15 +117,17 @@ const handleRefreshToken = async (refreshToken) => {
         }
     }
 
-    
-
 }
 
 const handleLogout = async (userId) => {
-    const user = await removeRefreshToken(userId);
-    if(!user){
-        throw new AppError("fail to delete refresh token", StatusCodes.INTERNAL_SERVER_ERROR);
-    }
+    // const user = await removeRefreshToken(userId);
+
+    const key = refreshTokenCacheKey(userId);
+    store.del(key);
+
+    // if(!user){
+    //     throw new AppError("fail to delete refresh token", StatusCodes.INTERNAL_SERVER_ERROR);
+    // }
     return {
         message: "user logged out successfully"
     }
