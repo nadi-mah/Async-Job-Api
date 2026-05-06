@@ -1,5 +1,10 @@
 const { StatusCodes } = require('http-status-codes');
-const { createJob, findJobById, findAllJobsByUserId, findAllJobsByUserIdPagination } = require('../repositories/job.repository');
+const { 
+    createJob, 
+    findJobById, 
+    findAllJobsByUserId, 
+    findAllJobsByUserIdPagination,
+    findAllJobsByUserIdPaginationCursor } = require('../repositories/job.repository');
 const {handleCreateJobEvent} = require('./jobEvent.service');
 
 const {JOB_STATUS, JOB_EVENTS} = require('../constants/job.constant');
@@ -8,6 +13,9 @@ const AppError = require('../utils/appError.util');
 const { v4: uuidv4 } = require('uuid')
 
 const { withTransaction } = require('../utils/transaction.util');
+
+const {getPaginationData} = require('../helper/pagination.helper');
+const {parseCursor, makeCursor} = require('../helper/cursor.helper');
 
 
 
@@ -60,15 +68,59 @@ const handleGetJob = async(userId, jobId) => {
     }
 }
 
-const handleGetAllJobs = async(userId, limit, offset) => {
-    // const jobs = await findAllJobsByUserId(userId);
-    const jobs = await findAllJobsByUserIdPagination(userId, limit, offset);
-    
-    if(jobs.length === 0){
-        throw new AppError("no job found", StatusCodes.NOT_FOUND);
+const handleGetAllJobs = async(userId, limit, page = 1, cursor) => {
+
+    let jobs = []
+    let pagination = null;
+    let nextCursor = null;
+
+    if(cursor){
+        const { createdAt, id } = parseCursor(cursor);
+        const result = await findAllJobsByUserIdPaginationCursor(userId, limit + 1, createdAt, id);
+
+        jobs = result.jobs;
+
+        const hasNext = jobs.length > limit;
+        if (hasNext) {
+            jobs = jobs.slice(0, limit);
+          }
+        const lastJob = jobs[jobs.length - 1];
+        nextCursor = hasNext && lastJob ? makeCursor(lastJob) : null;
+
+        pagination = {
+            type: 'cursor',
+            limit,
+            hasNext,
+            nextCursor
+          };
+
+    }else{
+        const offset = (page - 1) * limit;
+        const result = await findAllJobsByUserIdPagination(userId, limit, offset);
+
+        jobs = result.jobs;
+        const total = parseInt(result.total, 10);
+
+        pagination = getPaginationData(total, offset, limit);
+
+        const lastJob = jobs[jobs.length - 1];
+        nextCursor = pagination.hasNext && lastJob ? makeCursor(lastJob) : null;
+
+        pagination = {
+            ...pagination,
+            type: 'offset',
+            nextCursor
+        };
     }
+    
+    // if(jobs.length === 0){
+    //     throw new AppError("no job found", StatusCodes.NOT_FOUND);
+    // }
     return {
-        data: jobs
+        data: {
+            jobs,
+            pagination,
+        }
     }
 }
 
@@ -112,6 +164,7 @@ const handleCreateBulkJobs = async(userId, count) => {
         data: jobs
     }
 }
+
 
 
 module.exports = {

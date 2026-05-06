@@ -5,7 +5,12 @@ const {StatusCodes} = require('http-status-codes');
 
 const store = require('../utils/inMemoryStore');
 
-const {jobCacheKey, allJobsCacheKey, allJobsPaginationCacheKey} = require('../helper/jobCacheKey.helper');
+const {
+    jobCacheKey, 
+    allJobsCacheKey, 
+    allJobsPaginationCacheKey, 
+    allJobsCursorPaginationCacheKey
+} = require('../helper/jobCacheKey.helper');
 
 const createJob = async(req, res) => {
     try {
@@ -14,7 +19,7 @@ const createJob = async(req, res) => {
         const result = await handleCreateJob(userId);
 
         // const key = allJobsCacheKey(userId);
-        const prefix = `user:${userId}:page`
+        const prefix = `user:${userId}:limit`
         // store.del(key);
         store.delByPrefix(prefix);
 
@@ -51,15 +56,18 @@ const getAllJobs = async(req, res) => {
     try {
         const {userId} = req.user;
 
-        const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 10;
-
-        const offset = (page - 1) * limit;
+        const page = parseInt(req.query.page) || 1;
+        const cursor = req.query.cursor || null;
         
-        const result = await handleGetAllJobs(userId, limit, offset);
+        const result = await handleGetAllJobs(userId, limit, page, cursor);
 
-        // const key = allJobsCacheKey(userId);
-        const key = allJobsPaginationCacheKey(userId, page, limit);
+        let key = null;
+        if(cursor){
+            key = allJobsCursorPaginationCacheKey(userId, cursor, limit);
+        }else{
+            key = allJobsPaginationCacheKey(userId, page, limit);
+        }
         const ttl = 15 * 1000;
         store.set(key, result.data, ttl);
 

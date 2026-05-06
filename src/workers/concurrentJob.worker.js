@@ -26,7 +26,7 @@ const processSingleJob = async(job, workerId) => {
 
     const key = jobCacheKey(job.owner_id, job.id);
     // const allJobsKey = allJobsCacheKey(job.owner_id);
-    const prefix = `user:${job.owner_id}:page`
+    const prefix = `user:${job.owner_id}:limit`
     store.del(key);
     // store.del(allJobsKey);
     store.delByPrefix(prefix);
