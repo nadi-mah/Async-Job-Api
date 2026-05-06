@@ -1,12 +1,18 @@
-const {findPendingAndEligibleJobs, updateJob, claimEligibleJobs} = require('../repositories/job.repository');
+const { 
+    updateJob, 
+    claimEligibleJobs, 
+} = require('../repositories/job.repository');
+
 const {handleCreateJobEvent} = require('../services/jobEvent.service');
+const {handleCreateDeadJob} = require('../services/deadLetter.service');
 
 const {withTransaction} = require('../utils/transaction.util');
 const store = require('../utils/inMemoryStore');
 
 const {JOB_STATUS, JOB_EVENTS} = require('../constants/job.constant');
 
-const {jobCacheKey, allJobsCacheKey} = require('../helper/jobCacheKey.helper');
+const {jobCacheKey} = require('../helper/jobCacheKey.helper');
+
 
 const CONCURRENCY_LIMIT = 3;
 const POLL_INTERVAL_MS = 5000;
@@ -61,6 +67,8 @@ const processSingleJob = async(job, workerId) => {
             await withTransaction(async(client) => {
                 await updateJob(client, job.id, 'status', JOB_STATUS.FAILED);
                 await handleCreateJobEvent(job.id, JOB_EVENTS.FAILED, client);
+                await handleCreateDeadJob(job.id, job.owner_id, job.attempts, client);
+                
             })
             store.del(key);
             // store.del(allJobsKey);
