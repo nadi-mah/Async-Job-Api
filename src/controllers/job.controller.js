@@ -19,7 +19,7 @@ const createJob = async(req, res) => {
         const result = await handleCreateJob(userId);
 
         // const key = allJobsCacheKey(userId);
-        const prefix = `user:${userId}:limit`
+        const prefix = `user:${userId}:allJobs`
         // store.del(key);
         store.delByPrefix(prefix);
 
