@@ -8,6 +8,7 @@ const app = express();
 const authRoute = require('./routes/auth.route');
 const jobRoute = require('./routes/job.route');
 const dashboardRoute = require('./routes/dashboard.route');
+const deadLetter = require('./routes/deadLetter.route');
 
 const { processJobs } = require('./workers/job.worker');
 const {processJobsConcurrent} = require('./workers/concurrentJob.worker');
@@ -18,6 +19,7 @@ app.use(express.json());
 app.use('/auth', authRoute);
 app.use('/jobs', jobRoute);
 app.use('/dashboard', dashboardRoute);
+app.use('/deadLetterJobs', deadLetter);
 
 
 const PORT = process.env.PORT ?? 3000;

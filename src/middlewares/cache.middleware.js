@@ -7,6 +7,7 @@ const {
     allJobsPaginationCacheKey, 
     allJobsCursorPaginationCacheKey
 } = require('../helper/jobCacheKey.helper');
+const { allDeadJobsCacheKey, deadJobCacheKey } = require('../helper/deadJobsCacheKey.helper');
 
 const cachedJobs = async(req, res, next) => {
     const {id} = req.params;
@@ -49,4 +50,32 @@ const cacheAllJobs = async(req, res, next) => {
     }
 } 
 
-module.exports = {cachedJobs,  cacheAllJobs};
+const cacheAllDeadJobs = async(req, res, next) => {
+    const {userId} = req.user;
+
+    const key = allDeadJobsCacheKey(userId);
+    const cachedJobsData = store.get(key);
+
+    if(cachedJobsData !== null){
+        return res.status(StatusCodes.OK).json({data: cachedJobsData, way: "with cache"})
+    }else{
+        next()
+    }
+}
+
+const cacheDeadJobs = async(req, res, next) => {
+    const {id} = req.params;
+    const {userId} = req.user;
+
+    const key = deadJobCacheKey(userId, id);
+
+    const cachedJob = store.get(key);
+
+    if(cachedJob){
+        return res.status(StatusCodes.OK).json({data: cachedJob, way: "with cache"})
+    }else{
+        next()
+    }
+}
+
+module.exports = {cachedJobs,  cacheAllJobs, cacheAllDeadJobs, cacheDeadJobs};

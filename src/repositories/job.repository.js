@@ -103,7 +103,8 @@ const updateJob = async (db = pool, jobId, field, newValue) => {
     const fieldMap = {
         status: 'status',
         attempts: 'attempts',
-        nextRunAt: 'next_run_at'
+        nextRunAt: 'next_run_at',
+        maxAttempts:'max_attempts'
     };
 
     const dbField = fieldMap[field];

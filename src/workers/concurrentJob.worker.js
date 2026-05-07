@@ -42,7 +42,7 @@ const processSingleJob = async(job, workerId) => {
     const randomNumber = Math.floor(Math.random()*10);
 
     // Job Success
-    if(randomNumber % 2 === 0){
+    if(randomNumber % 5 === 0){
         await withTransaction(async(client) => {
             await updateJob(client, job.id, 'status', JOB_STATUS.DONE);
             await handleCreateJobEvent(job.id, JOB_EVENTS.COMPLETED, client);

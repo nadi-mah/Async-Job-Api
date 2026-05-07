@@ -49,6 +49,7 @@ CREATE TABLE IF NOT EXISTS dead_letter_jobs (
     job_id UUID NOT NULL UNIQUE,
     owner_id UUID NOT NULL,
     reason TEXT,
+    status TEXT,
     attempts INT NOT NULL,
     failed_at TIMESTAMPTZ NOT NULL,
 
