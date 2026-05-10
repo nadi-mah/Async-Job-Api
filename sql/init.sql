@@ -44,26 +44,31 @@
 -- CREATE INDEX idx_job_events_job
 -- ON job_events (job_id);
 
-CREATE TABLE IF NOT EXISTS dead_letter_jobs (
-    id UUID PRIMARY KEY,
-    job_id UUID NOT NULL UNIQUE,
-    owner_id UUID NOT NULL,
-    reason TEXT,
-    status TEXT,
-    attempts INT NOT NULL,
-    failed_at TIMESTAMPTZ NOT NULL,
+-- CREATE TABLE IF NOT EXISTS dead_letter_jobs (
+--     id UUID PRIMARY KEY,
+--     job_id UUID NOT NULL UNIQUE,
+--     owner_id UUID NOT NULL,
+--     reason TEXT,
+--     status TEXT,
+--     attempts INT NOT NULL,
+--     failed_at TIMESTAMPTZ NOT NULL,
 
-    CONSTRAINT fk_jobs_dead_letter_jobs
-        FOREIGN KEY (job_id)
-        REFERENCES jobs(id)
-        ON DELETE CASCADE,
-    CONSTRAINT fk_owner_dead_letter_jobs
-        FOREIGN KEY (owner_id)
-        REFERENCES users(id)
-        ON DELETE CASCADE
-);
-CREATE INDEX IF NOT EXISTS idx_dead_letter_jobs_owner
-ON dead_letter_jobs (owner_id);
+--     CONSTRAINT fk_jobs_dead_letter_jobs
+--         FOREIGN KEY (job_id)
+--         REFERENCES jobs(id)
+--         ON DELETE CASCADE,
+--     CONSTRAINT fk_owner_dead_letter_jobs
+--         FOREIGN KEY (owner_id)
+--         REFERENCES users(id)
+--         ON DELETE CASCADE
+-- );
+-- CREATE INDEX IF NOT EXISTS idx_dead_letter_jobs_owner
+-- ON dead_letter_jobs (owner_id);
 
-CREATE INDEX IF NOT EXISTS idx_dead_letter_jobs_job
-ON dead_letter_jobs (job_id);
+-- CREATE INDEX IF NOT EXISTS idx_dead_letter_jobs_job
+-- ON dead_letter_jobs (job_id);
+
+ALTER TABLE jobs
+ADD COLUMN type TEXT,
+ADD COLUMN payload JSONB,
+ADD COLUMN result JSONB;

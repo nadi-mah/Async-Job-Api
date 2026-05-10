@@ -5,6 +5,8 @@ const {StatusCodes} = require('http-status-codes');
 
 const store = require('../utils/inMemoryStore');
 
+const {validateCreateJobInput} = require('../validators/job.validator');
+
 const {
     jobCacheKey, 
     allJobsCacheKey, 
@@ -15,8 +17,17 @@ const {
 const createJob = async(req, res) => {
     try {
         const {userId} = req.user;
+        const {type, payload} = req.body;
 
-        const result = await handleCreateJob(userId);
+        const validationError = validateCreateJobInput({ type, payload });
+
+        if (validationError) {
+          return res.status(StatusCodes.BAD_REQUEST).json({
+            message: validationError
+          });
+        }
+
+        const result = await handleCreateJob(userId, type, payload);
 
         // const key = allJobsCacheKey(userId);
         const prefix = `user:${userId}:allJobs`

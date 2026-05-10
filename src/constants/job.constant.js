@@ -17,10 +17,18 @@ const DEAD_JOB_STATUS = {
     ACTIVE: 'active',
     REPLAYED: 'replayed',
     IGNORED: 'ignored'
-}
+};
+
+const JOB_TYPES = {
+    EMAIL: 'email',
+    REPORT: 'report',
+    PAYMENT_CHECK: 'payment_check',
+    IMAGE_PROCESSING: 'image_processing'
+};
 
 module.exports = {
     JOB_STATUS,
     JOB_EVENTS,
-    DEAD_JOB_STATUS
+    DEAD_JOB_STATUS,
+    JOB_TYPES
 }

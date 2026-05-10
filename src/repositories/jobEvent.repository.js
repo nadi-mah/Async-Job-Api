@@ -6,10 +6,10 @@ const pool = require('../config/db');
 // }
 const findJobEventByJobId = async (jobId) => {
     const result = await pool.query(
-        'SELECT * FROM job_events WHERE id = $1',
+        'SELECT * FROM job_events WHERE job_id = $1',
         [jobId]
     );
-    return result.rows[0];
+    return result.rows;
 }
 
 // const createJobEvent = (newEvent) => {

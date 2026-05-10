@@ -1,4 +1,6 @@
 const { StatusCodes } = require('http-status-codes');
+const { v4: uuidv4 } = require('uuid');
+
 const { 
     createJob, 
     findJobById, 
@@ -7,19 +9,18 @@ const {
     findAllJobsByUserIdPaginationCursor } = require('../repositories/job.repository');
 const {handleCreateJobEvent} = require('./jobEvent.service');
 
-const {JOB_STATUS, JOB_EVENTS} = require('../constants/job.constant');
 const AppError = require('../utils/appError.util');
-
-const { v4: uuidv4 } = require('uuid')
-
 const { withTransaction } = require('../utils/transaction.util');
 
 const {getPaginationData} = require('../helper/pagination.helper');
 const {parseCursor, makeCursor} = require('../helper/cursor.helper');
+const { createRandomJobInput } = require('../helper/jobFactory.helper');
+
+const {JOB_STATUS, JOB_EVENTS} = require('../constants/job.constant');
 
 
 
-const handleCreateJob = async(userId) => {
+const handleCreateJob = async(userId, type, payload) => {
 
     const result = await withTransaction(async (client) => {
         const newJob = {
@@ -28,6 +29,8 @@ const handleCreateJob = async(userId) => {
             status: JOB_STATUS.PENDING,
             attempts: 0,
             maxAttempts: 3,
+            type,
+            payload,
             nextRunAt: new Date(),
             createdAt: new Date(),
             updatedAt: new Date()
@@ -53,6 +56,7 @@ const handleCreateJob = async(userId) => {
     };
 
 }
+
 const handleGetJob = async(userId, jobId) => {
     const job = await findJobById(jobId);
 
@@ -134,12 +138,16 @@ const handleCreateBulkJobs = async(userId, count) => {
     const jobs = [];
 
     for (let i = 0; i < count; i++){
+        const randomeJob = createRandomJobInput();
+
         const newJob = {
             id: uuidv4(),
             ownerId: userId,
             status: JOB_STATUS.PENDING,
             attempts: 0,
             maxAttempts: 3,
+            type: randomeJob.type,
+            payload: randomeJob.payload,
             nextRunAt: new Date(),
             createdAt: new Date(),
             updatedAt: new Date()

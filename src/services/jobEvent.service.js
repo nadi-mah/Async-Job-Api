@@ -2,6 +2,7 @@ const {createJobEvent, findJobEventByJobId} = require('../repositories/jobEvent.
 const {findJobById} = require('../repositories/job.repository');
 
 const { v4: uuidv4 } = require('uuid')
+const { StatusCodes } = require('http-status-codes');
 const AppError = require('../utils/appError.util');
 
 const pool = require('../config/db');
@@ -22,11 +23,13 @@ const handleCreateJobEvent = async (jobId, eventType, db = pool) => {
 }
 
 const handleGetAllJobEvents = async (userId, jobId) => {
+    console.log(userId)
     const job = await findJobById(jobId);
+    console.log(job)
     if(!job){
         throw new AppError("job not found", StatusCodes.NOT_FOUND);
     }
-    if(job.ownerId !== userId){
+    if(job.owner_id !== userId){
         throw new AppError("access denied", StatusCodes.FORBIDDEN);
     }
 

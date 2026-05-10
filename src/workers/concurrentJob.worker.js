@@ -5,6 +5,7 @@ const {
 
 const {handleCreateJobEvent} = require('../services/jobEvent.service');
 const {handleCreateDeadJob} = require('../services/deadLetter.service');
+const { processJobByType } = require('../services/jobProcessor.service');
 
 const {withTransaction} = require('../utils/transaction.util');
 const store = require('../utils/inMemoryStore');
@@ -26,57 +27,61 @@ const stopWorker = () => {
 }
 
 const processSingleJob = async(job, workerId) => {
-    // const key = `user:${firstJob.owner_id}:job:${firstJob.id}`;
+    try {
+        console.log(`${workerId} started job ${job.id}`);
 
-    console.log(`${workerId} started job ${job.id}`);
-
-    const key = jobCacheKey(job.owner_id, job.id);
-    // const allJobsKey = allJobsCacheKey(job.owner_id);
-    const prefix = `user:${job.owner_id}:allJobs`
-    store.del(key);
-    // store.del(allJobsKey);
-    store.delByPrefix(prefix);
-
-    await sleep(PROCESSING_TIME_MS);
-
-    const randomNumber = Math.floor(Math.random()*10);
-
-    // Job Success
-    if(randomNumber % 5 === 0){
-        await withTransaction(async(client) => {
-            await updateJob(client, job.id, 'status', JOB_STATUS.DONE);
-            await handleCreateJobEvent(job.id, JOB_EVENTS.COMPLETED, client);
-        })
+        const key = jobCacheKey(job.owner_id, job.id);
+        const prefix = `user:${job.owner_id}:allJobs`
         store.del(key);
-        // store.del(allJobsKey);
         store.delByPrefix(prefix);
-    }else{
-        // Job Retry
-        if(job.attempts < job.max_attempts){
-            await withTransaction(async(client) => {
-                await updateJob(client, job.id, 'nextRunAt', new Date(Date.now() + 5000));
-                await updateJob(client, job.id, 'status', JOB_STATUS.PENDING);
-                await handleCreateJobEvent(job.id, JOB_EVENTS.RETRY, client);
-            })
-            store.del(key);
-            // store.del(allJobsKey);
-            store.delByPrefix(prefix);
-            
-        // Job Failure    
-        }else{
-            await withTransaction(async(client) => {
-                await updateJob(client, job.id, 'status', JOB_STATUS.FAILED);
-                await handleCreateJobEvent(job.id, JOB_EVENTS.FAILED, client);
-                await handleCreateDeadJob(job.id, job.owner_id, job.attempts, client);
-                
-            })
-            store.del(key);
-            // store.del(allJobsKey);
-            store.delByPrefix(prefix);
+
+        await sleep(PROCESSING_TIME_MS);
+
+        let jobResult;
+        let failureReason = null;
+
+        try {
+            jobResult = await processJobByType(job);
+        } catch (error) {
+            failureReason = error.message;
         }
 
+        if(failureReason){
+            // Job Retry
+            if(job.attempts < job.max_attempts){
+                await withTransaction(async(client) => {
+                    await updateJob(client, job.id, 'nextRunAt', new Date(Date.now() + RETRY_DELAY_MS));
+                    await updateJob(client, job.id, 'status', JOB_STATUS.PENDING);
+                    await handleCreateJobEvent(job.id, JOB_EVENTS.RETRY, client);
+                })
+                store.del(key);
+                store.delByPrefix(prefix);
+                
+            // Job Failure    
+            }else{
+                await withTransaction(async(client) => {
+                    await updateJob(client, job.id, 'status', JOB_STATUS.FAILED);
+                    await handleCreateJobEvent(job.id, JOB_EVENTS.FAILED, client);
+                    await handleCreateDeadJob(job.id, job.owner_id, job.attempts, failureReason, client);
+                    
+                })
+                store.del(key);
+                store.delByPrefix(prefix);
+            }
+        }else{
+            // Job Success
+            await withTransaction(async(client) => {
+                await updateJob(client, job.id, 'status', JOB_STATUS.DONE);
+                await updateJob(client, job.id, 'result', jobResult);
+                await handleCreateJobEvent(job.id, JOB_EVENTS.COMPLETED, client);
+            })
+            store.del(key);
+            store.delByPrefix(prefix);
+        }
+        console.log(`${workerId} completed/failed/retried job ${job.id}`);
+    } catch (error) {
+        console.error(`${workerId} unexpected error on job ${job.id}:`, error.message);    
     }
-    console.log(`${workerId} completed/failed/retried job ${job.id}`);
 }
 
 const processJobsConcurrent = async(workerId) => {

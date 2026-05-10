@@ -22,12 +22,12 @@ const { JOB_STATUS, JOB_EVENTS, DEAD_JOB_STATUS } = require('../constants/job.co
 const { allDeadJobsCacheKey, deadJobCacheKey } = require('../helper/deadJobsCacheKey.helper');
 const { jobCacheKey } = require('../helper/jobCacheKey.helper');
 
-const handleCreateDeadJob = async (jobId, ownerId, attempts, db) => {
+const handleCreateDeadJob = async (jobId, ownerId, attempts, reason = 'MAX_ATTEMPTS_REACHED', db) => {
     const newDeadJob = {
         id: uuidv4(),
         jobId,
         ownerId,
-        reason: 'nothing',
+        reason,
         status: 'active',
         attempts,
         failedAt: new Date()
@@ -88,7 +88,7 @@ const handleReplayDeadJob = async(userId, deadJobId, newMaxAttempts) => {
     });
     
     store.del(allDeadJobsCacheKey(userId));
-    store.del(deadJobCacheKey(userId, id));
+    store.del(deadJobCacheKey(userId, deadJob.id));
     store.del(jobCacheKey(userId, result.jobId));
     store.delByPrefix(`user:${userId}:allJobs`);
 
